@@ -1,0 +1,1608 @@
+#ESPHome Docker image 12.9.2
+#14032025 
+#Marc Erkens
+substitutions:
+  name: "guition-scherm-verlichting"
+  friendly_name: "Guition480-basic"
+  device_description: "Guition ESP32-S3-4848S040 480*480 Smart Screen"
+  project_name: "Guition.ESP32_S3_4848S040"
+  project_version: "1.0.0"
+
+  lightbulb: "\U000F0335"
+  ceiling_light: "\U000F0769"
+  lamp: "\U000F06B5"
+  floor_lamp: "\U000F08DD"
+  string_lights: "\U000F12BA"
+  solar: "\U000F1A73"
+  temp: "\U000F0F55"
+  radio: "\U000F0439"
+  radioactive: "\U000F043C"
+  fm: "\U000F0CBF"
+  cd: "\U000F05EE"
+  kpn: "\U000F1B97"
+  spotplafond: "\U000F091D"
+  spot: "\U000F17F4"
+  afzuiging: "\U000F0210"
+  speaker: "\U000F04C3"
+
+
+esphome:
+  name: "${name}"
+  friendly_name: "${friendly_name}"
+  #name_add_mac_suffix: true
+  project:
+    name: "${project_name}"
+    version: "${project_version}"
+  platformio_options:
+    board_build.flash_mode: dio
+
+esp32:
+  board: esp32-s3-devkitc-1
+  variant: esp32s3
+  flash_size: 16MB
+  framework:
+    type: esp-idf
+    sdkconfig_options:
+      COMPILER_OPTIMIZATION_SIZE: y
+      CONFIG_ESP32S3_DEFAULT_CPU_FREQ_240: "y"
+      CONFIG_ESP32S3_DATA_CACHE_64KB: "y"
+      CONFIG_ESP32S3_DATA_CACHE_LINE_64B: "y"
+      CONFIG_SPIRAM_FETCH_INSTRUCTIONS: y
+      CONFIG_SPIRAM_RODATA: y
+
+psram:
+  mode: octal
+  speed: 80MHz
+
+logger:
+
+api:
+  encryption:
+    key: "***********************************"
+
+ota:
+  platform: esphome
+  password: "****************************"
+
+wifi:
+  ssid: "************************"
+  password: "************************"
+  manual_ip:
+    static_ip: 192.168.1.43
+    gateway: 192.168.1.1
+    subnet: 255.255.255.0
+
+web_server:
+  port: 80
+
+
+external_components:
+  - source:
+      type: git
+      url: https://github.com/clydebarrow/esphome
+      ref: 82264dc2440981873b8400d613e0cc32d229daa3 #previous commit - wont be needed in the future
+    components: [lvgl]
+
+#Haal tijd op van HomeAssistant
+time:
+  - platform: homeassistant
+    on_time:
+      - hours: 2,3,4,5
+        minutes: 5
+        seconds: 0
+        then:
+          - switch.turn_on: switch_antiburn
+      - hours: 2,3,4,5
+        minutes: 35
+        seconds: 0
+        then:
+          - switch.turn_off: switch_antiburn
+
+# Switches in Homeassistant
+binary_sensor:
+  - platform: homeassistant
+    id: Woonkamer_Voor
+    entity_id: switch.woonkamer_voor_lampen_2
+    publish_initial_state: true
+    on_state:
+      then:
+        lvgl.widget.update:
+          id: lv_btn_1
+          state:
+            checked: !lambda return x;
+  
+  - platform: homeassistant
+    id: Woonkamer_Achter
+    entity_id: switch.woonkamer_achter_lampen_2
+    publish_initial_state: true
+    on_state:
+      then:
+        lvgl.widget.update:
+          id: lv_btn_3
+          state:
+            checked: !lambda return x;
+  
+  - platform: homeassistant
+    id: staande_lamp
+    entity_id: light.staande_lamp
+    publish_initial_state: true
+    on_state:
+      then:
+        lvgl.widget.update:
+          id: lv_btn_5
+          state:
+            checked: !lambda return x;
+
+  - platform: homeassistant
+    id: lamp_overkapping
+    entity_id: light.dimmer_2
+    publish_initial_state: true
+    on_state:
+      then:
+        lvgl.widget.update:
+          id: lv_btn_6
+          state:
+            checked: !lambda return x;
+
+  - platform: homeassistant
+    id: verlichting_bar
+    entity_id: switch.verlichting_bar
+    publish_initial_state: true
+    on_state:
+      then:
+        lvgl.widget.update:
+          id: lv_btn_2
+          state:
+            checked: !lambda return x;
+
+  - platform: homeassistant
+    id: Oprit
+    entity_id: switch.tuin_achter
+    publish_initial_state: true
+    on_state:
+      then:
+        lvgl.widget.update:
+          id: lv_btn_11
+          state:
+            checked: !lambda return x;
+
+  - platform: homeassistant
+    id: Tuin_Achter
+    entity_id: switch.tuin_voor
+    publish_initial_state: true
+    on_state:
+      then:
+        lvgl.widget.update:
+          id: lv_btn_10
+          state:
+            checked: !lambda return x;
+
+  - platform: homeassistant
+    id: afzuigkap
+    entity_id: switch.afzuiging_keuken
+    publish_initial_state: true
+    on_state:
+      then:
+        lvgl.widget.update:
+          id: lv_btn_12
+          state:
+            checked: !lambda return x;
+
+  - platform: homeassistant
+    id: woofer
+    entity_id: switch.woofer
+    publish_initial_state: true
+    on_state:
+      then:
+        lvgl.widget.update:
+          id: lv_btn_4
+          state:
+            checked: !lambda return x;
+
+  - platform: homeassistant
+    id: Radio_80
+    entity_id: automation.media_select_80_s
+    publish_initial_state: False
+    on_state:
+      then:
+        lvgl.widget.update:
+          id: lv_btn_50
+          state:
+            checked: !lambda return x;
+
+  - platform: homeassistant
+    id: Arrow
+    entity_id: automation.media_select_arrow
+    publish_initial_state: False
+    on_state:
+      then:
+        lvgl.widget.update:
+          id: lv_btn_51
+          state:
+            checked: !lambda return x;
+
+  - platform: homeassistant
+    id: Radio_90
+    entity_id: automation.media_select_sky90s
+    publish_initial_state: False
+    on_state:
+      then:
+        lvgl.widget.update:
+          id: lv_btn_52
+          state:
+            checked: !lambda return x;
+
+  - platform: homeassistant
+    id: Sky_Radio
+    entity_id: automation.media_select_sky
+    publish_initial_state: False
+    on_state:
+      then:
+        lvgl.widget.update:
+          id: lv_btn_53
+          state:
+            checked: !lambda return x;
+
+  - platform: homeassistant
+    id: Disco
+    entity_id: automation.media_select_disco
+    publish_initial_state: False
+    on_state:
+      then:
+        lvgl.widget.update:
+          id: lv_btn_54
+          state:
+            checked: !lambda return x;
+
+  - platform: homeassistant
+    id: Joe
+    entity_id: automation.media_select_joe
+    publish_initial_state: False
+    on_state:
+      then:
+        lvgl.widget.update:
+          id: lv_btn_55
+          state:
+            checked: !lambda return x;
+
+  - platform: homeassistant
+    id: FM_Tuner
+    entity_id: automation.media_seclect_tuner_fm
+    publish_initial_state: False
+    on_state:
+      then:
+        lvgl.widget.update:
+          id: lv_btn_56
+          state:
+            checked: !lambda return x;
+
+  - platform: homeassistant
+    id: DC_Player
+    entity_id: automation.media_select_cd
+    publish_initial_state: False
+    on_state:
+      then:
+        lvgl.widget.update:
+          id: lv_btn_57
+          state:
+            checked: !lambda return x;
+
+  - platform: homeassistant
+    id: KPN_Box
+    entity_id: automation.media_seclect_kpn
+    publish_initial_state: False
+    on_state:
+      then:
+        lvgl.widget.update:
+          id: lv_btn_58
+          state:
+            checked: !lambda return x;
+
+# Switches die in homeassistant bekend gemaakt worden
+switch:
+  - platform: lvgl
+    widget: lv_btn_2
+    name: LVGL switch_2
+  - platform: lvgl
+    widget: lv_btn_8
+    name: LVGL switch_8
+  - platform: lvgl
+    widget: lv_btn_50
+    name: LVGL switch_50
+    id: switch_50
+  - platform: lvgl
+    widget: lv_btn_51
+    name: LVGL switch_51
+    id: switch_51
+  - platform: lvgl
+    widget: lv_btn_52
+    name: LVGL switch_52
+    id: switch_52
+  - platform: lvgl
+    widget: lv_btn_53
+    name: LVGL switch_53
+    id: switch_53
+  - platform: lvgl
+    widget: lv_btn_54
+    name: LVGL switch_54
+    id: switch_54
+  - platform: lvgl
+    widget: lv_btn_55
+    name: LVGL switch_55
+    id: switch_55
+  - platform: lvgl
+    widget: lv_btn_56
+    name: LVGL switch_56
+    id: switch_56
+  - platform: lvgl
+    widget: lv_btn_57
+    name: LVGL switch_57
+    id: switch_57
+  - platform: lvgl
+    widget: lv_btn_58
+    name: LVGL switch_58
+    id: switch_58
+
+#Anti inbranden scherm
+  - platform: template
+    name: Antiburn
+    id: switch_antiburn
+    icon: mdi:television-shimmer
+    optimistic: true
+    entity_category: "config"
+    turn_on_action:
+      - logger.log: "Starting Antiburn"
+      - if:
+          condition: lvgl.is_paused
+          then:
+            - lvgl.resume:
+            - lvgl.widget.redraw:
+      - lvgl.pause:
+          show_snow: true
+    turn_off_action:
+      - logger.log: "Stopping Antiburn"
+      - if:
+          condition: lvgl.is_paused
+          then:
+            - lvgl.resume:
+            - lvgl.widget.redraw:
+
+
+# Ophalen Homeassistant sensoren
+sensor:
+  - platform: homeassistant
+    id: Temp_Overkapping
+    entity_id: sensor.temp_overkapping
+    internal: true
+    on_value:
+      - lvgl.label.update:
+          id: temp_text
+          text:
+            format: "%.1f °C"
+            args: [ 'x' ]
+  - platform: homeassistant
+    id: Temp_Woonkamer
+    entity_id: sensor.pir_woonkamer_air_temperature
+    internal: true
+    on_value:
+      - lvgl.label.update:
+          id: temp_text_1
+          text:
+            format: "%.1f °C"
+            args: [ 'x' ]
+  - platform: homeassistant
+    id: Temp_Zolder
+    entity_id: sensor.temp_zolder
+    internal: true
+    on_value:
+      - lvgl.label.update:
+          id: temp_text_2
+          text:
+            format: "%.1f °C"
+            args: [ 'x' ]
+  - platform: homeassistant
+    id: Temp_Werkkamer
+    entity_id: sensor.temp_werkkamer
+    internal: true
+    on_value:
+      - lvgl.label.update:
+          id: temp_text_3
+          text:
+            format: "%.1f °C"
+            args: [ 'x' ]
+  - platform: homeassistant
+    id: Temp_Gang
+    entity_id: sensor.smoke_detector_air_temperature
+    internal: true
+    on_value:
+      - lvgl.label.update:
+          id: temp_text_4
+          text:
+            format: "%.1f °C"
+            args: [ 'x' ]
+  - platform: homeassistant
+    id: Temp_Meterkast
+    entity_id: sensor.temp_meterkast
+    internal: true
+    on_value:
+      - lvgl.label.update:
+          id: temp_text_5
+          text:
+            format: "%.1f °C"
+            args: [ 'x' ]
+
+  - platform: homeassistant
+    id: Solar_production_day
+    entity_id: sensor.mozarthome_solar_energy_today
+    internal: true
+    on_value:
+      - lvgl.label.update:
+          id: solar_prod_today
+          text:
+            format: "%.1f Kwh"
+            args: [ 'x' ]
+  - platform: homeassistant
+    id: Solar_production_total
+    entity_id: sensor.mozarthome_solar_energy_total
+    internal: true
+    on_value:
+      - lvgl.label.update:
+          id: solar_prod_total
+          text:
+            format: "%.0f Kwh"
+            args: [ 'x' ]
+  - platform: homeassistant
+    id: Gas_consumption
+    entity_id: sensor.gas_meter_gas_consumption
+    internal: true
+    on_value:
+      - lvgl.label.update:
+          id: gas_consumption
+          text:
+            format: "%.0f Kub"
+            args: [ 'x' ]
+  - platform: homeassistant
+    id: Power_consumption
+    entity_id: sensor.power_consumption
+    internal: true
+    on_value:
+      - lvgl.label.update:
+          id: Powwer_use
+          text:
+            format: "%.3f Kw"
+            args: [ 'x' ]
+  - platform: homeassistant
+    id: Power_prod
+    entity_id: sensor.power_production
+    internal: true
+    on_value:
+      - lvgl.label.update:
+          id: Powwer_prod
+          text:
+            format: "%.3f Kw"
+            args: [ 'x' ]
+  - platform: homeassistant
+    id: Geiger
+    entity_id: sensor.geiger_counter
+    internal: true
+    on_value:
+      - lvgl.label.update:
+          id: Geiger1
+          text:
+            format: "%.0f cpm"
+            args: [ 'x' ]
+
+
+#Dimmers
+  - platform: homeassistant
+    id: light_brightness
+    entity_id: light.staande_lamp
+    attribute: brightness
+    on_value:
+      - lvgl.slider.update:
+          id: dimmer_slider
+          value: !lambda return x;
+  - platform: homeassistant
+    id: light_brightness_1
+    entity_id: light.dimmer_2
+    attribute: brightness
+    on_value:
+      - lvgl.slider.update:
+          id: dimmer_slider_1
+          value: !lambda return x;
+
+# TEXT sensoren ophalen in HomeAssistant
+text_sensor:
+  - platform: homeassistant
+    id: RD4_Vandaag
+    entity_id: sensor.afvalwijzer_today
+    internal: true
+
+  - platform: homeassistant
+    id: RD4_Morgen
+    entity_id: sensor.afvalwijzer_tomorrow
+    internal: true
+
+  - platform: homeassistant
+    id: Gft
+    entity_id: sensor.afvalwijzer_gft
+    internal: true
+
+  - platform: homeassistant
+    id: Papier
+    entity_id: sensor.afvalwijzer_papier
+    internal: true
+    
+  - platform: homeassistant
+    id: PMD
+    entity_id: sensor.afvalwijzer_pmd
+    internal: true
+
+  - platform: homeassistant
+    id: Rest
+    entity_id: sensor.afvalwijzer_restafval
+    internal: true
+
+
+lvgl:  
+  displays:
+    - display_id: my_display    
+  touchscreens:
+    - touchscreen_id: my_touchscreen
+  on_idle:
+    - timeout: 10s
+      then:
+        - logger.log: idle timeout
+        - if:
+            condition:
+              lvgl.is_idle:
+                timeout: 5s
+            then:
+              - logger.log: LVGL is idle
+    - timeout: 15s
+      then:
+        - logger.log: idle 15s timeout
+        
+
+# Button definitie Next Home en Prev
+  top_layer:
+    widgets:
+      - btnmatrix:
+          align: bottom_mid
+          styles: header_footer
+          pad_all: 0
+          outline_width: 0
+          id: top_layer
+          bg_color: 0xff0000
+          rows:
+            - buttons:
+              - id: page_prev
+                text: "\uF053"
+                on_press:
+                  then:
+                    lvgl.page.previous:
+              - id: page_home
+                text: "\uF015"
+                on_press:
+                  then:
+                    lvgl.page.show: main_page
+              - id: page_next
+                text: "\uF054"
+                on_press:
+                  then:
+                    lvgl.page.next:
+
+  style_definitions:
+    - id: style_line
+      line_color: 0x0000FF
+      line_width: 8
+      line_rounded: true
+    - id: date_style
+      text_font: roboto24
+      align: center
+      text_color: 0x333333
+      bg_opa: cover
+      radius: 4
+      pad_all: 2
+
+# instellingen voor de next en homepage buttons
+    - id: header_footer
+      bg_color: 0x808080
+      bg_grad_color: 0x808080
+      bg_grad_dir: HOR
+      bg_opa: TRANSP
+      border_opa: TRANSP
+      radius: 6
+      pad_all: 0
+      pad_row: 0
+      pad_column: 0
+      border_color: 0x808080
+      text_color: 0x006699
+      width: 100%
+      height: 82
+
+
+# instellingen voor de buttons
+  theme:
+    btn:
+      text_font: roboto24
+      scroll_on_focus: true
+      group: general
+      radius: 10
+      width: 150
+      height: 100
+      pad_left: 10px
+      pad_top: 10px
+      pad_bottom: 10px
+      pad_right: 10px
+      shadow_width: 2
+      bg_color: 0x313131
+      text_color: 0xB6B6B6
+      checked:
+        bg_color: 0x006400
+        text_color: 0xB6B6B6
+
+  page_wrap: true
+  pages:
+    - id: main_page
+      skip: true
+      layout:
+        type: FLEX
+        flex_flow: ROW_WRAP
+        flex_align_cross: CENTER
+      width: 100%
+      bg_color: 0x000000
+      bg_opa: cover
+      pad_all: 5
+      widgets:
+        - btn:
+            height: 88
+            checkable: true
+            id: lv_btn_1
+            widgets:
+              - label:
+                  text_font: light40
+                  align: top_mid
+                  text: $spotplafond
+                  id: lv_btn_1_icon
+              - label:
+                  align: bottom_mid
+                  text: "Living"
+                  long_mode: dot
+            on_click:
+              - homeassistant.action:
+                  action: switch.toggle
+                  data:
+                    entity_id: switch.woonkamer_voor_lampen_2
+                    
+        - btn:
+            height: 88
+            checkable: true
+            id: lv_btn_2
+            widgets:
+              - label:
+                  text_font: light40
+                  align: top_mid
+                  text: $spotplafond
+                  id: lv_btn_2_icon
+              - label:
+                  align: bottom_mid
+                  text: "Lamp_Bar"
+                  long_mode: dot
+            on_click:
+              - homeassistant.action:
+                  action: switch.toggle
+                  data:
+                    entity_id: switch.verlichting_bar
+        - btn:
+            height: 88
+            checkable: true
+            id: lv_btn_3
+            widgets:
+              - label:
+                  text_font: light40
+                  align: top_mid
+                  text: $spotplafond
+                  id: lv_btn_3_icon
+              - label:
+                  align: bottom_mid
+                  text: "Eetkamer"
+                  long_mode: dot
+            on_click:
+              - homeassistant.action:
+                  action: switch.toggle
+                  data:
+                    entity_id: switch.woonkamer_achter_lampen_2
+        - btn:
+            height: 88
+            checkable: true
+            id: lv_btn_4
+            widgets:
+              - label:
+                  text_font: light40
+                  align: top_mid
+                  text: $speaker
+                  id: lv_btn_4_icon
+              - label:
+                  align: bottom_mid
+                  text: "Woofer"
+                  long_mode: dot
+            on_click:
+              - homeassistant.action:
+                  action: switch.toggle
+                  data:
+                    entity_id: switch.woofer
+
+        - btn:
+            height: 88
+            checkable: true
+            id: lv_btn_5
+            widgets:
+              - label:
+                  text_font: light40
+                  align: top_mid
+                  text:  $floor_lamp
+                  id: lv_btn_5_icon
+              - label:
+                  align: bottom_mid
+                  text: "Staande"
+                  long_mode: dot
+            on_click:
+              - homeassistant.action:
+                  action: light.toggle
+                  data:
+                    entity_id: light.staande_lamp
+        - btn:
+            height: 88
+            checkable: true
+            id: lv_btn_6
+            widgets:
+              - label:
+                  text_font: light40
+                  align: top_mid
+                  text: $spotplafond
+                  id: lv_btn_6_icon
+              - label:
+                  align: bottom_mid
+                  text: "Overkapping"
+                  long_mode: dot
+            on_click:
+              - homeassistant.action:
+                  action: light.toggle
+                  data:
+                    entity_id: light.dimmer_2
+        - btn:
+            height: 88
+            checkable: true
+            id: lv_btn_7
+            widgets:
+              - label:
+                  text_font: light40
+                  align: top_mid
+                  text: $spotplafond
+                  id: lv_btn_7_icon
+              - label:
+                  align: bottom_mid
+                  text: "Light_7"
+                  long_mode: dot
+            on_click:
+              light.toggle: internal_light
+        - btn:
+            height: 88
+            checkable: false
+            id: lv_btn_8
+            bg_color: 0xff0000
+            widgets:
+              - label:
+                  text_font: light40
+                  align: top_mid
+                  text: $solar
+                  id: lv_btn_8_icon
+              - label:
+                  align: bottom_mid
+                  text: "Huis Op Solar"
+                  long_mode: dot
+
+        - btn:
+            height: 88
+            checkable: true
+            id: lv_btn_9
+            widgets:
+              - label:
+                  text_font: light40
+                  align: top_mid
+                  text: $spotplafond
+                  id: lv_btn_9_icon
+              - label:
+                  align: bottom_mid
+                  text: "Light_9"
+                  long_mode: dot
+
+        - btn:
+            height: 88
+            checkable: true
+            id: lv_btn_10
+            widgets:
+              - label:
+                  text_font: light40
+                  align: top_mid
+                  text: $spotplafond
+                  id: lv_btn_10_icon
+              - label:
+                  align: bottom_mid
+                  text: "Tuin_Voor"
+                  long_mode: dot
+            on_click:
+              - homeassistant.action:
+                  action: switch.toggle
+                  data:
+                    entity_id: switch.tuin_voor
+        - btn:
+            height: 88
+            checkable: true
+            id: lv_btn_11
+            widgets:
+              - label:
+                  text_font: light40
+                  align: top_mid
+                  text: $spotplafond
+                  id: lv_btn_11_icon
+              - label:
+                  align: bottom_mid
+                  text: "Oprit"
+                  long_mode: dot
+            on_click:
+              - homeassistant.action:
+                  action: switch.toggle
+                  data:
+                    entity_id: switch.tuin_achter
+        - btn:
+            height: 88
+            checkable: true
+            id: lv_btn_12
+            widgets:
+              - label:
+                  text_font: light40
+                  align: top_mid
+                  text: $afzuiging
+                  id: lv_btn_12_icon
+              - label:
+                  align: bottom_mid
+                  text: "Afzuigkap"
+                  long_mode: dot
+            on_click:
+              - homeassistant.action:
+                  action: switch.toggle
+                  data:
+                    entity_id: switch.afzuiging_keuken
+
+
+    - id: page_2
+      skip: false
+      layout:
+        type: FLEX
+        flex_flow: ROW_WRAP
+        flex_align_cross: CENTER
+      width: 100%
+      bg_color: 0x000000
+      bg_opa: cover
+      pad_all: 5
+      widgets:
+        - btn:
+            height: 88
+            checkable: true
+            id: lv_btn_50
+            widgets:
+              - label:
+                  text_font: light40
+                  align: top_mid
+                  text: $radio
+                  id: lv_btn_50_icon
+              - label:
+                  align: bottom_mid
+                  text: "Radio-80"
+                  long_mode: dot
+            on_click:
+ #              - switch.turn_off: switch_50  #Radio-80           
+               - switch.turn_off: switch_51  #Arrow
+               - switch.turn_off: switch_52  #Radio-90
+               - switch.turn_off: switch_53  #Sky-Radio
+               - switch.turn_off: switch_54  #Disco
+               - switch.turn_off: switch_55  #Joa
+               - switch.turn_off: switch_56  #FM-Tuner
+               - switch.turn_off: switch_57  #CD-Speler
+               - switch.turn_off: switch_58  #KPN-Box          
+        - btn:
+            height: 88
+            checkable: true
+            id: lv_btn_51
+            widgets:
+              - label:
+                  text_font: light40
+                  align: top_mid
+                  text: $radio
+                  id: lv_btn_51_icon
+              - label:
+                  align: bottom_mid
+                  text: "Arrow"
+                  long_mode: dot
+            on_click:
+               - switch.turn_off: switch_50  #Radio-80           
+ #              - switch.turn_off: switch_51  #Arrow
+               - switch.turn_off: switch_52  #Radio-90
+               - switch.turn_off: switch_53  #Sky-Radio
+               - switch.turn_off: switch_54  #Disco
+               - switch.turn_off: switch_55  #Joa
+               - switch.turn_off: switch_56  #FM-Tuner
+               - switch.turn_off: switch_57  #CD-Speler
+               - switch.turn_off: switch_58  #KPN-Box   
+        - btn:
+            height: 88
+            checkable: true
+            id: lv_btn_52
+            widgets:
+              - label:
+                  text_font: light40
+                  align: top_mid
+                  text: $radio
+                  id: lv_btn_52_icon
+              - label:
+                  align: bottom_mid
+                  text: "Radio-90"
+                  long_mode: dot
+            on_click:
+               - switch.turn_off: switch_50  #Radio-80           
+               - switch.turn_off: switch_51  #Arrow
+ #              - switch.turn_off: switch_52  #Radio-90
+               - switch.turn_off: switch_53  #Sky-Radio
+               - switch.turn_off: switch_54  #Disco
+               - switch.turn_off: switch_55  #Joa
+               - switch.turn_off: switch_56  #FM-Tuner
+               - switch.turn_off: switch_57  #CD-Speler
+               - switch.turn_off: switch_58  #KPN-Box   
+        - btn:
+            height: 88
+            checkable: true
+            id: lv_btn_53
+            widgets:
+              - label:
+                  text_font: light40
+                  align: top_mid
+                  text: $radio
+                  id: lv_btn_53_icon
+              - label:
+                  align: bottom_mid
+                  text: "Sky-Radio"
+                  long_mode: dot
+            on_click:
+               - switch.turn_off: switch_50  #Radio-80           
+               - switch.turn_off: switch_51  #Arrow
+               - switch.turn_off: switch_52  #Radio-90
+#               - switch.turn_off: switch_53  #Sky-Radio
+               - switch.turn_off: switch_54  #Disco
+               - switch.turn_off: switch_55  #Joa
+               - switch.turn_off: switch_56  #FM-Tuner
+               - switch.turn_off: switch_57  #CD-Speler
+               - switch.turn_off: switch_58  #KPN-Box   
+        - btn:
+            height: 88
+            checkable: true
+            id: lv_btn_54
+            widgets:
+              - label:
+                  text_font: light40
+                  align: top_mid
+                  text: $radio
+                  id: lv_btn_54_icon
+              - label:
+                  align: bottom_mid
+                  text: "Disco"
+                  long_mode: dot
+            on_click:
+               - switch.turn_off: switch_50  #Radio-80           
+               - switch.turn_off: switch_51  #Arrow
+               - switch.turn_off: switch_52  #Radio-90
+               - switch.turn_off: switch_53  #Sky-Radio
+ #              - switch.turn_off: switch_54  #Disco
+               - switch.turn_off: switch_55  #Joa
+               - switch.turn_off: switch_56  #FM-Tuner
+               - switch.turn_off: switch_57  #CD-Speler
+               - switch.turn_off: switch_58  #KPN-Box   
+        - btn:
+            height: 88
+            checkable: true
+            id: lv_btn_55
+            widgets:
+              - label:
+                  text_font: light40
+                  align: top_mid
+                  text: $radio
+                  id: lv_btn_55_icon
+              - label:
+                  align: bottom_mid
+                  text: "Joe"
+                  long_mode: dot
+            on_click:
+               - switch.turn_off: switch_50  #Radio-80           
+               - switch.turn_off: switch_51  #Arrow
+               - switch.turn_off: switch_52  #Radio-90
+               - switch.turn_off: switch_53  #Sky-Radio
+               - switch.turn_off: switch_54  #Disco
+#               - switch.turn_off: switch_55  #Joe
+               - switch.turn_off: switch_56  #FM-Tuner
+               - switch.turn_off: switch_57  #CD-Speler
+               - switch.turn_off: switch_58  #KPN-Box   
+        - btn:
+            height: 90
+            width: 470
+            checkable: false
+            id: lv_btn_70
+            radius: 10
+            widgets:
+#              - label:
+#                  text_font: light40
+#                  align: top_left
+#                  text: $lightbulb
+#                  id: lv_btn_70_icon
+              - label:
+                  align: bottom_left
+                  text: "Volume"
+                  long_mode: dot                
+              - slider:
+                  align: center
+                  id: slider_media_player
+                  x: 0
+                  y: 0
+                  width: 400
+                  height: 15
+                  pad_all: 8
+                  min_value: 0
+                  max_value: 50
+                  adv_hittest: true
+                  on_value:
+                    - homeassistant.action:
+                        action: media_player.volume_set
+                        data:
+                          entity_id: media_player.denon_ceol
+                          volume_level: !lambda return (x / 100);     
+        - btn:
+            height: 88
+            checkable: true
+            id: lv_btn_56
+            widgets:
+              - label:
+                  text_font: light40
+                  align: top_mid
+                  text: $fm
+                  id: lv_btn_56_icon
+              - label:
+                  align: bottom_mid
+                  text: "FM-Tuner"
+                  long_mode: dot
+            on_click:
+               - switch.turn_off: switch_50  #Radio-80           
+               - switch.turn_off: switch_51  #Arrow
+               - switch.turn_off: switch_52  #Radio-90
+               - switch.turn_off: switch_53  #Sky-Radio
+               - switch.turn_off: switch_54  #Disco
+               - switch.turn_off: switch_55  #Joe
+#               - switch.turn_off: switch_56  #FM-Tuner
+               - switch.turn_off: switch_57  #CD-Speler
+               - switch.turn_off: switch_58  #KPN-Box   
+        - btn:
+            height: 88
+            checkable: true
+            id: lv_btn_57
+            widgets:
+              - label:
+                  text_font: light40
+                  align: top_mid
+                  text: $cd
+                  id: lv_btn_57_icon
+              - label:
+                  align: bottom_mid
+                  text: "CD-Speler"
+                  long_mode: dot
+            on_click:
+               - switch.turn_off: switch_50  #Radio-80           
+               - switch.turn_off: switch_51  #Arrow
+               - switch.turn_off: switch_52  #Radio-90
+               - switch.turn_off: switch_53  #Sky-Radio
+               - switch.turn_off: switch_54  #Disco
+               - switch.turn_off: switch_55  #Joa
+               - switch.turn_off: switch_56  #FM-Tuner
+ #              - switch.turn_off: switch_57  #CD-Speler
+               - switch.turn_off: switch_58  #KPN-Box   
+        - btn:
+            height: 89
+            checkable: true
+            id: lv_btn_58
+            widgets:
+              - label:
+                  text_font: light40
+                  align: top_mid
+                  text: $kpn
+                  id: lv_btn_58_icon
+              - label:
+                  align: bottom_mid
+                  text: "KPN-Box"
+                  long_mode: dot
+            on_click:
+               - switch.turn_off: switch_50  #Radio-80           
+               - switch.turn_off: switch_51  #Arrow
+               - switch.turn_off: switch_52  #Radio-90
+               - switch.turn_off: switch_53  #Sky-Radio
+               - switch.turn_off: switch_54  #Disco
+               - switch.turn_off: switch_55  #Joa
+               - switch.turn_off: switch_56  #FM-Tuner
+               - switch.turn_off: switch_57  #CD-Speler
+ #              - switch.turn_off: switch_58  #KPN-Box   
+
+    - id: page_1
+      skip: false
+      layout:
+        type: FLEX
+        flex_flow: ROW_WRAP
+        flex_align_cross: CENTER
+      width: 100%
+      bg_color: 0x000000
+      bg_opa: cover
+      pad_all: 5
+      widgets:
+        - btn:
+            height: 88
+            checkable: false
+#            id: lv_btn_30
+            widgets:
+              - label:
+                  text_font: light40
+                  align: top_left
+                  text: $temp
+              - label:
+                  align: bottom_mid
+                  text: "Buiten"
+                  id: temp_text
+                  long_mode: dot
+              - label:
+                  align: top_right
+                  text: "Buiten"
+                  long_mode: dot
+        - btn:
+            height: 88
+            checkable: false
+#            id: lv_btn_30
+            widgets:
+              - label:
+                  text_font: light40
+                  align: top_left
+                  text: $temp
+              - label:
+                  align: bottom_mid
+                  text: "Woonkamer"
+                  id: temp_text_1
+                  long_mode: dot
+              - label:
+                  align: top_right
+                  text: "Living"
+                  long_mode: dot
+        - btn:
+            height: 88
+            checkable: false
+#            id: lv_btn_30
+            widgets:
+              - label:
+                  text_font: light40
+                  align: top_left
+                  text: $temp
+              - label:
+                  align: bottom_mid
+                  text: "Zolder"
+                  id: temp_text_2
+                  long_mode: dot
+              - label:
+                  align: top_right
+                  text: "Zolder"
+                  long_mode: dot
+        - btn:
+            height: 88
+            checkable: false
+#            id: lv_btn_30
+            widgets:
+              - label:
+                  text_font: light40
+                  align: top_left
+                  text: $temp
+              - label:
+                  align: bottom_mid
+                  text: "Werkkamer"
+                  id: temp_text_3
+                  long_mode: dot
+              - label:
+                  align: top_right
+                  text: "Kantoor"
+                  long_mode: dot
+        - btn:
+            height: 88
+            checkable: false
+#            id: lv_btn_30
+            widgets:
+              - label:
+                  text_font: light40
+                  align: top_left
+                  text: $temp
+              - label:
+                  align: bottom_mid
+                  text: "Gang"
+                  id: temp_text_4
+                  long_mode: dot
+              - label:
+                  align: top_right
+                  text: "Gang"
+                  long_mode: dot
+        - btn:
+            height: 88
+            checkable: false
+#            id: lv_btn_30
+            widgets:
+              - label:
+                  text_font: light40
+                  align: top_left
+                  text: $temp
+              - label:
+                  align: bottom_mid
+                  text: "Meterkast"
+                  id: temp_text_5
+                  long_mode: dot
+              - label:
+                  align: top_right
+                  text: "Server"
+                  long_mode: dot
+        - btn:
+            height: 88
+            checkable: false
+            id: lv_btn_100
+            widgets:
+              - label:
+                  align: bottom_mid
+                  text: "Solar_Prod"
+                  id: solar_prod_today
+                  long_mode: dot
+              - label:
+                  align: top_mid
+                  text: "Solar_Today"
+                  long_mode: dot
+        - btn:
+            height: 88
+            checkable: false
+            id: lv_btn_101
+            widgets:
+              - label:
+                  align: bottom_mid
+                  text: "Solar_Total"
+                  id: solar_prod_total
+                  long_mode: dot
+              - label:
+                  align: top_mid
+                  text: "Solar_Total"
+                  long_mode: dot
+        - btn:
+            height: 88
+            checkable: false
+            id: lv_btn_102
+            widgets:
+              - label:
+                  align: bottom_mid
+                  text: "Gas"
+                  id: gas_consumption
+                  long_mode: dot
+              - label:
+                  align: top_mid
+                  text: "Gas"
+                  long_mode: dot
+        - btn:
+            height: 88
+            checkable: false
+            id: lv_btn_103
+            widgets:
+              - label:
+                  align: bottom_mid
+                  text: "Power-use"
+                  id: Powwer_use
+                  long_mode: dot
+              - label:
+                  align: top_mid
+                  text: "Power-use"
+                  long_mode: dot
+        - btn:
+           height: 88
+           checkable: false
+           id: lv_btn_104
+           widgets:
+             - label:
+                 align: bottom_mid
+                 text: "Power-prod"
+                 id: Powwer_prod
+                 long_mode: dot
+             - label:
+                 align: top_mid
+                 text: "Power-prod"
+                 long_mode: dot
+        - btn:
+           height: 88
+           checkable: false
+           id: lv_btn_105
+           widgets:
+             - label:
+                 text_font: light40
+                 align: top_left
+                 text: $radioactive
+             - label:
+                 align: bottom_mid
+                 text: "Geiger"
+                 id: Geiger1
+                 long_mode: dot
+             - label:
+                 align: top_right
+                 text: "Geiger"
+                 long_mode: dot
+
+    - id: page_4
+      skip: false
+      layout:
+        type: FLEX
+        flex_flow: ROW_WRAP
+        flex_align_cross: CENTER
+      width: 100%
+      bg_color: 0x000000
+      bg_opa: cover
+      pad_all: 5
+      widgets:
+        - btn:
+            radius: 10
+            height: 88
+            width: 470
+            checkable: false
+            id: lv_btn_300
+            widgets:
+              - label:
+                 align: bottom_mid
+                 text: "Dimmer Staande Lamp"
+#                 id: staande_lamp
+                 long_mode: dot
+              - slider:
+                  id: dimmer_slider
+                  x: 20
+                  y: 20
+                  width: 420
+                  height: 20
+                  pad_all: 8
+                  min_value: 1
+                  max_value: 255
+                  on_release:
+                    - homeassistant.action:
+                        action: light.turn_on
+                        data:
+                          entity_id: light.staande_lamp
+                          brightness: !lambda return int(x);
+        - btn:
+            radius: 10
+            height: 88
+            width: 470
+            checkable: false
+            id: lv_btn_301
+            widgets:
+              - label:
+                 align: bottom_mid
+                 text: "Dimmer Overkapping"
+#                 id: staande_lamp
+                 long_mode: dot
+              - slider:
+                  id: dimmer_slider_1
+                  x: 20
+                  y: 20
+                  width: 420
+                  height: 20
+                  pad_all: 8
+                  min_value: 1
+                  max_value: 255
+                  on_release:
+                    - homeassistant.action:
+                        action: light.turn_on
+                        data:
+                          entity_id: light.dimmer_2
+                          brightness: !lambda return int(x);
+
+
+
+#-------------------------------------------
+# Internal outputs
+#-------------------------------------------
+output:
+  # Backlight LED
+  - platform: ledc
+    pin: GPIO38
+    id: GPIO38
+    frequency: 100Hz
+
+    # Built in 240v relay
+  - id: internal_relay_1
+    platform: gpio
+    pin: 40
+
+
+
+#-------------------------------------------
+# Internal lights
+#-------------------------------------------
+light:
+  - platform: monochromatic
+    output: GPIO38
+    name: Backlight
+    id: backlight
+    restore_mode: ALWAYS_ON
+
+  - platform: binary
+    output: internal_relay_1
+    name: Internal Light
+    id: internal_light
+    on_turn_on:
+      then:
+        - lvgl.widget.update:
+            id: lv_btn_7
+            state:
+              checked: true
+    on_turn_off:
+      then:
+        - lvgl.widget.update:
+            id: lv_btn_7
+            state:
+              checked: false
+
+
+
+#-------------------------------------------
+# Graphics and Fonts
+#-------------------------------------------
+font:
+  - file: "gfonts://Roboto"
+    id: roboto24
+    size: 24
+    bpp: 4
+    extras:
+      - file: "https://github.com/IdreesInc/Monocraft/releases/download/v3.0/Monocraft.ttf" # http://materialdesignicons.com/cdn/7.4.47/
+        glyphs:
+          [
+            "\U000F004B",
+            "\U0000f0ed",
+            "\U000F006E",
+            "\U000F012C",
+            "\U000F179B",
+            "\U000F0748",
+            "\U000F1A1B",
+            "\U000F02DC",
+            "\U000F0A02",
+            "\U000F035F",
+            "\U000F0156",
+            "\U000F0C5F",
+            "\U000f0084",
+            "\U000f0091",
+          ]
+
+  - file: 'https://github.com/Templarian/MaterialDesign-Webfont/raw/v7.4.47/fonts/materialdesignicons-webfont.ttf'
+    id: light40
+    size: 40
+    bpp: 4
+    glyphs: [
+      "\U000F0335",  # mdi-lightbulb
+      "\U000F0769",  # mdi-ceiling-light
+      "\U000F06B5",  # mdi-lamp
+      "\U000F08DD",  # mdi-floor-lamp
+      "\U000F12BA",  # mdi-string-lights
+      "\U000F1A73",  # mdi-solar
+      "\U000F0F55",  # mdi-thermometer
+      "\U000F0439",  # mdi-radio
+      "\U000F043C",  # mdi-radioactive
+      "\U000F0CBF",  # mdi-radioFM
+      "\U000F05EE",  # mdi-CD
+      "\U000F1B97",  # mdi-TV-box
+      "\U000F091D",  # mdi-Spot-plafond
+      "\U000F17F4",  # mdi-Spot-bar
+      "\U000F0210",  # mdi-afzuiging
+      "\U000F04C3",  # mdi-speaker      
+    ]
+
+#-------------------------------------------
+# Touchscreen gt911 i2c
+#-------------------------------------------
+i2c:
+  - id: bus_a
+    sda: GPIO19
+    scl: GPIO45
+    #frequency: 100kHz
+
+touchscreen:
+  platform: gt911
+  transform:
+    mirror_x: false
+    mirror_y: false
+  id: my_touchscreen
+  display: my_display
+  on_release:
+    then:
+      - if:
+           condition: lvgl.is_paused
+           then:
+            - lvgl.resume:
+            - lvgl.widget.redraw:
+  on_touch:
+    - logger.log:
+        format: Touch at (%d, %d)
+        args: [touch.x, touch.y]
+    - lambda: |-
+        ESP_LOGI("cal", "x=%d, y=%d, x_raw=%d, y_raw=%0d",
+            touch.x,
+            touch.y,
+            touch.x_raw,
+            touch.y_raw
+            );
+
+#-------------------------------------------
+# Display st7701s spi
+#-------------------------------------------
+spi:
+  - id: lcd_spi
+    clk_pin: GPIO48
+    mosi_pin: GPIO47
+
+display:
+  - platform: st7701s
+    id: my_display
+    update_interval: never
+    auto_clear_enabled: False
+    spi_mode: MODE3
+    data_rate: 2MHz
+    color_order: RGB
+    invert_colors: False
+    dimensions:
+      width: 480
+      height: 480
+    cs_pin: 39
+    de_pin: 18
+    hsync_pin: 16
+    vsync_pin: 17
+    pclk_pin: 21
+    pclk_frequency: 12MHz
+    pclk_inverted: False
+    hsync_pulse_width: 8
+    hsync_front_porch: 10
+    hsync_back_porch: 20
+    vsync_pulse_width: 8
+    vsync_front_porch: 10
+    vsync_back_porch: 10
+    init_sequence:
+      - 1
+      # Custom sequences are an array, first byte is command, the rest are data.
+      - [0xFF, 0x77, 0x01, 0x00, 0x00, 0x10] # CMD2_BKSEL_BK0
+      - [0xCD, 0x00] # disable MDT flag
+    data_pins:
+      red:
+        - 11 #r1
+        - 12 #r2
+        - 13 #r3
+        - 14 #r4
+        - 0 #r5
+      green:
+        - 8 #g0
+        - 20 #g1
+        - 3 #g2
+        - 46 #g3
+        - 9 #g4
+        - 10 #g5
+      blue:
+        - 4 #b1
+        - 5 #b2
+        - 6 #b3
+        - 7 #b4
+        - 15 #b5
+
+    
