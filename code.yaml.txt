@@ -1,5 +1,6 @@
 #ESPHome Docker image 12.9.2
-#14032025 
+#version 14032025
+#version 18032025 auto screen off added
 #Marc Erkens
 substitutions:
   name: "guition-scherm-verlichting"
@@ -24,6 +25,9 @@ substitutions:
   spot: "\U000F17F4"
   afzuiging: "\U000F0210"
   speaker: "\U000F04C3"
+  up: "\U000F06B7"
+  down: "\U000F06B6"
+
 
 
 esphome:
@@ -58,15 +62,15 @@ logger:
 
 api:
   encryption:
-    key: "***********************************"
+    key: "/v7wyaf6iEXqAoMb0pLTA4lRNe5NkY2fxX/JfD7+frs="
 
 ota:
   platform: esphome
-  password: "****************************"
+  password: "ad7db448c889c3f8bad6de28b4650953"
 
 wifi:
-  ssid: "************************"
-  password: "************************"
+  ssid: "LINKSYS_BN"
+  password: "osmaxabc"
   manual_ip:
     static_ip: 192.168.1.43
     gateway: 192.168.1.1
@@ -102,7 +106,7 @@ time:
 binary_sensor:
   - platform: homeassistant
     id: Woonkamer_Voor
-    entity_id: switch.woonkamer_voor_lampen_2
+    entity_id: light.guition_midden_internal_light_1
     publish_initial_state: true
     on_state:
       then:
@@ -113,7 +117,7 @@ binary_sensor:
   
   - platform: homeassistant
     id: Woonkamer_Achter
-    entity_id: switch.woonkamer_achter_lampen_2
+    entity_id: light.guition_midden_internal_light_2
     publish_initial_state: true
     on_state:
       then:
@@ -297,6 +301,8 @@ binary_sensor:
           id: lv_btn_58
           state:
             checked: !lambda return x;
+
+
 
 # Switches die in homeassistant bekend gemaakt worden
 switch:
@@ -511,6 +517,7 @@ sensor:
           id: dimmer_slider_1
           value: !lambda return x;
 
+
 # TEXT sensoren ophalen in HomeAssistant
 text_sensor:
   - platform: homeassistant
@@ -550,18 +557,11 @@ lvgl:
   touchscreens:
     - touchscreen_id: my_touchscreen
   on_idle:
-    - timeout: 10s
-      then:
-        - logger.log: idle timeout
-        - if:
-            condition:
-              lvgl.is_idle:
-                timeout: 5s
-            then:
-              - logger.log: LVGL is idle
-    - timeout: 15s
-      then:
-        - logger.log: idle 15s timeout
+    timeout: !lambda "return (id(display_timeout).state * 1000);"
+    then:
+      - logger.log: "LVGL is idle"
+      - light.turn_off: backlight
+      - lvgl.pause:
         
 
 # Button definitie Next Home en Prev
@@ -673,7 +673,7 @@ lvgl:
               - homeassistant.action:
                   action: switch.toggle
                   data:
-                    entity_id: switch.woonkamer_voor_lampen_2
+                    entity_id: light.guition_midden_internal_light_1
                     
         - btn:
             height: 88
@@ -712,7 +712,7 @@ lvgl:
               - homeassistant.action:
                   action: switch.toggle
                   data:
-                    entity_id: switch.woonkamer_achter_lampen_2
+                    entity_id: light.guition_midden_internal_light_2
         - btn:
             height: 88
             checkable: true
@@ -786,7 +786,7 @@ lvgl:
                   text: "Light_7"
                   long_mode: dot
             on_click:
-              light.toggle: internal_light
+              light.toggle: internal_light_1
         - btn:
             height: 88
             checkable: false
@@ -817,6 +817,8 @@ lvgl:
                   align: bottom_mid
                   text: "Light_9"
                   long_mode: dot
+            on_click:
+              light.toggle: internal_light_2
 
         - btn:
             height: 88
@@ -1039,15 +1041,15 @@ lvgl:
             id: lv_btn_70
             radius: 10
             widgets:
-#              - label:
-#                  text_font: light40
-#                  align: top_left
-#                  text: $lightbulb
+              - label:
+                  text_font: light40
+                  align: top_left
+                  text: $speaker
 #                  id: lv_btn_70_icon
               - label:
                   align: bottom_left
                   text: "Volume"
-                  long_mode: dot                
+                  long_mode: dot                   
               - slider:
                   align: center
                   id: slider_media_player
@@ -1413,7 +1415,6 @@ lvgl:
                           brightness: !lambda return int(x);
 
 
-
 #-------------------------------------------
 # Internal outputs
 #-------------------------------------------
@@ -1428,6 +1429,9 @@ output:
   - id: internal_relay_1
     platform: gpio
     pin: 40
+  - id: internal_relay_2
+    platform: gpio
+    pin: 2
 
 
 
@@ -1443,8 +1447,8 @@ light:
 
   - platform: binary
     output: internal_relay_1
-    name: Internal Light
-    id: internal_light
+    name: Internal Light_1
+    id: internal_light_1
     on_turn_on:
       then:
         - lvgl.widget.update:
@@ -1458,7 +1462,22 @@ light:
             state:
               checked: false
 
-
+  - platform: binary
+    output: internal_relay_2
+    name: Internal Light_2
+    id: internal_light_2
+    on_turn_on:
+      then:
+        - lvgl.widget.update:
+            id: lv_btn_9
+            state:
+              checked: true
+    on_turn_off:
+      then:
+        - lvgl.widget.update:
+            id: lv_btn_9
+            state:
+              checked: false
 
 #-------------------------------------------
 # Graphics and Fonts
@@ -1508,7 +1527,10 @@ font:
       "\U000F091D",  # mdi-Spot-plafond
       "\U000F17F4",  # mdi-Spot-bar
       "\U000F0210",  # mdi-afzuiging
-      "\U000F04C3",  # mdi-speaker      
+      "\U000F04C3",  # mdi-speaker 
+      "\U000F06B7",  # mdi-up
+      "\U000F06B6",  # mdi-down      
+      
     ]
 
 #-------------------------------------------
@@ -1520,6 +1542,19 @@ i2c:
     scl: GPIO45
     #frequency: 100kHz
 
+number:
+  - platform: template
+    name: LVGL Screen timeout
+    optimistic: true
+    id: display_timeout
+    unit_of_measurement: "s"
+    initial_value: 45
+    restore_value: true
+    min_value: 10
+    max_value: 180
+    step: 5
+    mode: box
+
 touchscreen:
   platform: gt911
   transform:
@@ -1530,10 +1565,12 @@ touchscreen:
   on_release:
     then:
       - if:
-           condition: lvgl.is_paused
-           then:
+          condition: lvgl.is_paused
+          then:
+            - logger.log: "LVGL resuming"
             - lvgl.resume:
             - lvgl.widget.redraw:
+            - light.turn_on: backlight
   on_touch:
     - logger.log:
         format: Touch at (%d, %d)
@@ -1604,5 +1641,3 @@ display:
         - 6 #b3
         - 7 #b4
         - 15 #b5
-
-    
