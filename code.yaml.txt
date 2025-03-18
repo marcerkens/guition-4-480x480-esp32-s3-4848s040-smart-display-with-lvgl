@@ -62,15 +62,15 @@ logger:
 
 api:
   encryption:
-    key: "/v7wyaf6iEXqAoMb0pLTA4lRNe5NkY2fxX/JfD7+frs="
+    key: "/rs="
 
 ota:
   platform: esphome
-  password: "ad7db448c889c3f8bad6de28b4650953"
+  password: "ad7db8b4650953"
 
 wifi:
-  ssid: "LINKSYS_BN"
-  password: "osmaxabc"
+  ssid: "L**********"
+  password: "********"
   manual_ip:
     static_ip: 192.168.1.43
     gateway: 192.168.1.1
